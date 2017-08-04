@@ -26,8 +26,6 @@ wss.on("error", error => {
 wss.on("connection", (connection) => {
 	// Start listening for message when a connection is made.
 	connection.on("message", (rawMessage) => {
-		log(rawMessage);
-
 		let message;
 		try {
 			message = JSON.parse(rawMessage);
@@ -59,7 +57,7 @@ wss.on("connection", (connection) => {
 			case "CallReject":
 			case "SdpOffer":
 			case "SdpAnswer":
-			case "Candidate":
+			case "IceCandidate":
 				forwardMessage(message);
 				break;
 
@@ -75,9 +73,6 @@ wss.on("connection", (connection) => {
 					// Clear both connections' "other username".
 					// This could be a bit more elegant with some sort of "ongoing calls" list.
 					hangup(connection, message);
-					connection.otherUsername = null;
-					users[connection.otherUsername].otherUsername = null;
-					forwardMessage(message);
 				}
 				break;
 		}
@@ -123,8 +118,8 @@ function close(connection) {
 function hangup(connection, message) {
 	// Clear "other username" on both connections.
 	// This could be a bit more elegant with some sort of "ongoing calls" list.
-	connection.otherUsername = null;
 	users[connection.otherUsername].otherUsername = null;
+	connection.otherUsername = null;
 	forwardMessage(message);
 }
 
