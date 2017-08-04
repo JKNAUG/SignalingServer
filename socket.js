@@ -11,13 +11,13 @@ const wss = new WebSocket.Server({ port: 8080 });
 // All connected users.
 let users = {};
 
-class User {
-	constructor(username, connection) {
-		this.username = username;
-		this.connection = connection;
-		this.state = "idle";
-	}
-}
+// class User {
+// 	constructor(username, connection) {
+// 		this.username = username;
+// 		this.connection = connection;
+// 		this.state = "idle";
+// 	}
+// }
 
 wss.on("error", error => {
 	log("WebSocket Server error: " + error);
@@ -56,7 +56,6 @@ wss.on("connection", (connection) => {
 				break;
 
 			case "Call":
-			case "CallAccept":
 			case "CallReject":
 			case "SdpOffer":
 			case "SdpAnswer":
@@ -64,10 +63,18 @@ wss.on("connection", (connection) => {
 				forwardMessage(message);
 				break;
 
+			case "CallAccept":
+				// Set "other username" on both connections.
+				connection.otherUsername = message.ToUserId;
+				users[message.ToUserId].otherUsername = connection.username;
+				forwardMessage(message);
+				break;
+
 			case "Hangup":
 				if (connection.otherUsername) {
 					// Clear both connections' "other username".
 					// This could be a bit more elegant with some sort of "ongoing calls" list.
+					hangup(connection, message);
 					connection.otherUsername = null;
 					users[connection.otherUsername].otherUsername = null;
 					forwardMessage(message);
@@ -100,21 +107,25 @@ function forwardMessage(message) {
 
 function close(connection) {
 	if (connection.username) { // If logged in
+		if (connection.otherUsername) {
+			hangup(connection, {
+				Type: "Hangup",
+				FromUserId: connection.username,
+				ToUserId: connection.otherUsername
+				// Might need to add payload later
+			});
+		}
 		log("Closing: " + connection.username);
 		delete users[connection.username]; // Remove this user from the list.
-
-		// If we are calling, or in a call with, another user.
-		if (connection.otherUsername) {
-			let otherConnection = users[connection.otherUsername];
-			if (otherConnection) {
-				otherConnection.otherUsername = null;
-				sendTo(otherConnection, {
-					Type: "HangUp",
-					UserId: connection.username
-				});
-			}
-		}
 	}
+}
+
+function hangup(connection, message) {
+	// Clear "other username" on both connections.
+	// This could be a bit more elegant with some sort of "ongoing calls" list.
+	connection.otherUsername = null;
+	users[connection.otherUsername].otherUsername = null;
+	forwardMessage(message);
 }
 
 function sendTo(connection, message) {
