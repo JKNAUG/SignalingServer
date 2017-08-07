@@ -91,12 +91,12 @@ function forwardMessage(message) {
 	let receivingUsername = message.ToUserId;
 	let userToForwardTo = users[receivingUsername];
 	if (userToForwardTo) {
-		log(`Sending message ${message.Type} to user ${receivingUsername}.`);
+		log(`${message.FromUserId}: Sending message ${message.Type} to ${receivingUsername}.`);
 		sendTo(userToForwardTo, message);
 		return true;
 	}
 
-	log(`Could not forward message ${message.Type} to user ${receivingUsername}.`);
+	log(`${message.FromUserId}: Could not forward message ${message.Type} to ${receivingUsername}.`);
 	return false;
 }
 
