@@ -2,26 +2,46 @@
 // Reference implementation: https://www.tutorialspoint.com/webrtc/webrtc_signaling.htm
 
 const WebSocket = require("ws");
+const moment = require("moment");
 
 // Start the WebSocket server on port 8080.
-// const wss = new WebSocket.Server({ server: httpServer });
 // const wss = new WebSocket.Server({ host: "192.168.0.105", port: 8080 });
 const wss = new WebSocket.Server({ port: 8080 });
 
 // All connected users.
-let users = {};
+const users = [];
 
-// class User {
-// 	constructor(username, connection) {
-// 		this.username = username;
-// 		this.connection = connection;
-// 		this.state = "idle";
-// 	}
-// }
+class User {
+	constructor(connection, name) {
+		this.connection = connection;
+		this.name = name;
+	}
+
+	setConnectedUser(user) {
+		// Add some validation...
+		this.connectedUser = user;
+	}
+
+	getConnectedUser() {
+		return this.connectedUser;
+	}
+
+	send(message) {
+		this.connection.send(JSON.stringify(message));
+	}
+}
 
 wss.on("error", error => {
 	log("WebSocket Server error: " + error);
 });
+
+function findUser(name) {
+	return users.find(user => user.name === name);
+}
+
+function findUserByConnection(connection) {
+	return users.find(user => user.connection === connection);
+}
 
 wss.on("connection", (connection) => {
 	// Start listening for message when a connection is made.
@@ -37,23 +57,22 @@ wss.on("connection", (connection) => {
 		switch (message.Type) {
 			case "Login":
 				{
-					let username = message.FromUserId;
+					const username = message.FromUserId;
 					// If the user is not logged in yet.
-					if (!users[username]) {
+					if (!findUser(username)) {
 						log("Logging in " + username);
-						// Store the connection by the username as a key in the users list.
-						users[username] = connection;
-						// Store our username on the connection object.
-						connection.username = username;
-						// alternative
-						// const user = new User(username, connection);
-						// users[username] = user;
-						// connection.user = user;
+						const user = new User(connection, username);
+						users.push(user);
 					}
 				}
 				break;
 
 			case "Call":
+				let callingUser = findUserByConnection(connection);
+				callingUser.setConnectedUser(findUser(message.ToUserId));
+				forwardMessage(message);
+				break;
+
 			case "CallReject":
 			case "SdpOffer":
 			case "SdpAnswer":
@@ -62,17 +81,19 @@ wss.on("connection", (connection) => {
 				break;
 
 			case "CallAccept":
-				// Set "other username" on both connections.
-				connection.otherUsername = message.ToUserId;
-				users[message.ToUserId].otherUsername = connection.username;
-				forwardMessage(message);
+				{
+					let user = findUserByConnection(connection);
+					user.setConnectedUser(findUser(message.ToUserId));
+					forwardMessage(message);
+				}
 				break;
 
 			case "Hangup":
-				if (connection.otherUsername) {
-					// Clear both connections' "other username".
-					// This could be a bit more elegant with some sort of "ongoing calls" list.
-					hangup(connection, message);
+				{
+					let user = findUserByConnection(connection);
+					if (user.getConnectedUser()) {
+						hangup(user, message);
+					}
 				}
 				break;
 		}
@@ -82,51 +103,60 @@ wss.on("connection", (connection) => {
 		log("Connection " + connection.username + "error:\n" + error);
 	});
 
-	connection.on("close", (code, message) => {
+	connection.on("close", (/*code, message*/) => {
 		close(connection);
 	});
 });
 
 function forwardMessage(message) {
-	let receivingUsername = message.ToUserId;
-	let userToForwardTo = users[receivingUsername];
+	const receivingUsername = message.ToUserId;
+	const userToForwardTo = findUser(receivingUsername);
 	if (userToForwardTo) {
 		log(`${message.FromUserId}: Sending message ${message.Type} to ${receivingUsername}.`);
-		sendTo(userToForwardTo, message);
+		userToForwardTo.send(message);
 		return true;
 	}
 
-	log(`${message.FromUserId}: Could not forward message ${message.Type} to ${receivingUsername}.`);
+	// User to send message to is not online.
+	log(`${message.FromUserId}: Could not forward message ${message.Type} to ${receivingUsername}. Hanging up.`);
+	hangup(findUser(message.FromUserId), {
+		Type: "Hangup", // Could change this type to "User not available" or something.
+		FromUserId: message.FromUserId,
+		ToUserId: message.FromUserId
+	})
 	return false;
 }
 
 function close(connection) {
-	if (connection.username) { // If logged in
-		if (connection.otherUsername) {
-			hangup(connection, {
+	let user = findUserByConnection(connection);
+	if (user) { // If logged in
+		const connectedUser = user.getConnectedUser();
+		if (connectedUser) {
+			hangup(user, {
 				Type: "Hangup",
-				FromUserId: connection.username,
-				ToUserId: connection.otherUsername
+				FromUserId: user.name,
+				ToUserId: connectedUser.name
 				// Might need to add payload later
 			});
 		}
-		log("Closing: " + connection.username);
-		delete users[connection.username]; // Remove this user from the list.
+		log("Closing: " + user.name);
+		users.splice(users.indexOf(user), 1);
 	}
 }
 
-function hangup(connection, message) {
+function hangup(user, message) {
 	// Clear "other username" on both connections.
 	// This could be a bit more elegant with some sort of "ongoing calls" list.
-	users[connection.otherUsername].otherUsername = null;
-	connection.otherUsername = null;
+	// let otherConnection = users[connection.otherUsername];
+	let otherUser = user.getConnectedUser();
+	if (otherUser) {
+		otherUser.setConnectedUser(null);
+	}
+	user.setConnectedUser(null);
 	forwardMessage(message);
 }
 
-function sendTo(connection, message) {
-	connection.send(JSON.stringify(message));
-}
-
 function log(message) {
-	console.log(message);
+	const dateStr = moment().format("DD/MM/YYYY HH:mm:ss");
+	console.log(`[${dateStr}] ${message}`);
 }
