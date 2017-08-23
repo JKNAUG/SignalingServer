@@ -1,45 +1,25 @@
-const express = require("express");
-const bodyParser = require("body-parser");
+const app = require("http").createServer(handler);
+const io = require("socket.io")(app);
+const fs = require("fs");
 
-let app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
-
-let connectedPeers = [];
-
-app.get("/sign_in", (req, res) => {
-	let peerName = req._parsedUrl.query;
-	let foundPeer = connectedPeers.find(p => p.name === peerName);
-	if (!foundPeer) {
-		let peer = {
-			name: peerName,
-			id: connectedPeers.length
-		};
-		connectedPeers.push(peer);
-		res.header("Pragma", peer.id);
-		console.log("Signed in peer " + peer.name);
-
-		let connectedPeersString = "";
-		for (let p in connectedPeers) {
-			// build the string
-			// send it with the body
-		}
-
-		res.send("Signed in peer " + peer.name);
-	} else {
-		res.sendStatus(403);
-	}
+io.on("connection", socket => {
+	console.log("socket:");
+	console.log(socket);
+	socket.emit("message", "thanks");
 });
 
-app.get("/wait", (req, res) => {
-	console.log("Wait: " + req.query);
-	res.header("Pragma", "1");
-	// name, id, connection status
-	res.send("Peer 1, 1, 1");
-});
+function handler(req, res) {
+	fs.readFile(__dirname + '/index.html',
+		function (err, data) {
+			if (err) {
+				console.log(err);
+				res.writeHead(500);
+				return res.end('Error loading index.html');
+			}
 
-app.get("/*", (req, res) => {
-	// console.log(req);
-	console.log(req.url);
-});
+			res.writeHead(200);
+			res.end(data);
+		});
+}
 
-app.listen(8888);
+app.listen(8080);

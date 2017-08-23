@@ -6,7 +6,7 @@ const moment = require("moment");
 
 // Start the WebSocket server on port 8080.
 // const wss = new WebSocket.Server({ host: "192.168.0.105", port: 8080 });
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ host: "0.0.0.0", port: 8080 });
 
 // All connected users.
 const users = [];
@@ -44,13 +44,15 @@ function findUserByConnection(connection) {
 }
 
 wss.on("connection", (connection) => {
+	log(connection);
+
 	// Start listening for message when a connection is made.
 	connection.on("message", (rawMessage) => {
 		let message;
 		try {
 			message = JSON.parse(rawMessage);
-		} catch (error) {
-			log(error);
+		} catch (exception) {
+			log(exception);
 			return;
 		}
 

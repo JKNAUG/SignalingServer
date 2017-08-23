@@ -1,13 +1,17 @@
 const WebSocket = require("ws");
 
-var ws = new WebSocket("ws://localhost:3000/");
+try {
+	var ws = new WebSocket("ws://80.243.175.50:8080/socket.io/?EIO=2&transport=websocket");
+	// var ws = new WebSocket("ws://80.243.175.50:8080/");
+} catch (e) {
+	console.log("exception");
+	console.log(e);	
+}
 
-ws.onopen = (event) => {
-	console.log("connection opened");
-	ws.send("Hello from meee");
-};
+ws.on("open", () => {
+	console.log("open");
+});
 
-ws.onmessage = (event) => {
-	console.log(event);
-	ws.close();
-};
+ws.on("error", error => {
+	console.log(error);
+});
