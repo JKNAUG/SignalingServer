@@ -4,23 +4,32 @@
 const WebSocket = require("ws");
 const express = require("express");
 const moment = require("moment");
+const fs = require("fs");
+
 
 // const wss = new WebSocket.Server({ host: "192.168.0.105", port: 8080 });
 const PORT = process.env.PORT || 8080;
-const server = express()
-	.use((req, res) => {
-		try {
-			res.send(`Signaling server active with ${wss.clients.size} connected clients.`);
-		} catch (e) {
-			res.send("Error: " + e.message);
-		}
-		// Send back index.html for any http request.
-		// res.sendFile("index.html", { root: __dirname });
-	})
-	.listen(PORT, () => {
-		log(`Listening on port ${PORT}.`);
-	});
+const app = express();
+const server = app.listen(PORT, () => {
+	fs.writeFileSync(__dirname + "/logs.txt", "");
+	log(`Listening on port ${PORT}.`);
+});
 
+app.get("/", (req, res) => {
+	try {
+		res.send(`Signaling server active with ${wss.clients.size} connected clients.`);
+	} catch (e) {
+		res.send("Error: " + e.message);
+	}
+	// Send back index.html for any http request.
+	// res.sendFile("index.html", { root: __dirname });
+});
+
+// Send the logs file when requested.
+app.get("/logs", (req, res) => {
+	res.sendFile("logs.html", { root: __dirname });
+});
+	
 // const wss = new WebSocket.Server({ host: "0.0.0.0", port: PORT });
 // Start the WebSocket server.
 var wss = new WebSocket.Server({ server });
@@ -204,5 +213,7 @@ function hangup(user, message) {
 
 function log(message) {
 	const dateStr = moment().format("DD/MM/YYYY HH:mm:ss");
-	console.log(`[${dateStr}] ${message}`);
+	const logMessage = `[${dateStr}] ${message}`;
+	console.log(logMessage);
+	fs.appendFile(__dirname + "/logs.html", logMessage + "</br>");
 }
