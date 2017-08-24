@@ -5,18 +5,19 @@ const WebSocket = require("ws");
 const express = require("express");
 const moment = require("moment");
 
-// Start the WebSocket server on port 8080.
 // const wss = new WebSocket.Server({ host: "192.168.0.105", port: 8080 });
 const PORT = process.env.PORT || 8080;
-const server = express()
-	.use((req, res) => {
-		res.sendFile("index.html", { root: __dirname });
-	})
-	.listen(PORT, () => {
-		log(`Listening on port ${PORT}.`);
-	});
+const server = express();
+server.use((req, res) => {
+	// Send back index.html for any http request.
+	res.sendFile("index.html", { root: __dirname });
+});
+server.listen(PORT, () => {
+	log(`Listening on port ${PORT}.`);
+});
 
 // const wss = new WebSocket.Server({ host: "0.0.0.0", port: PORT });
+// Start the WebSocket server.
 const wss = new WebSocket.Server({ server });
 
 // All connected users.
@@ -47,7 +48,7 @@ wss.on("listening", () => {
 });
 
 wss.on("error", error => {
-	log("WebSocket Server error: " + error);
+	log(`WebSocket Server error:\n${error}`);
 });
 
 function findUser(name) {
@@ -59,7 +60,7 @@ function findUserByConnection(connection) {
 }
 
 wss.on("connection", (connection) => {
-	log("New connection...");
+	log("New WebSocket connection...");
 
 	// Start listening for message when a connection is made.
 	connection.on("message", (rawMessage) => {
@@ -76,10 +77,12 @@ wss.on("connection", (connection) => {
 				{
 					const username = message.FromUserId;
 					// If the user is not logged in yet.
+					log(`Logging in user  ${username}...`);
 					if (!findUser(username)) {
-						log("Logging in " + username);
 						const user = new User(connection, username);
 						users.push(user);
+					} else {
+						log(`User ${username} is already logged in.`);
 					}
 				}
 				break;
@@ -117,7 +120,7 @@ wss.on("connection", (connection) => {
 	});
 
 	connection.on("error", error => {
-		log("Connection " + connection.username + "error:\n" + error);
+		log(`Connection ${connection.username} error:\n${error}`);
 	});
 
 	connection.on("close", (/*code, message*/) => {
@@ -156,8 +159,10 @@ function close(connection) {
 				// Might need to add payload later
 			});
 		}
-		log("Closing: " + user.name);
+		log(`Closing user ${user.name}.`);
 		users.splice(users.indexOf(user), 1);
+	} else {
+		log("Closing connection without login.");
 	}
 }
 
