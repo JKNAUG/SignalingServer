@@ -11,7 +11,7 @@ const fs = require("fs");
 const PORT = process.env.PORT || 8080;
 const app = express();
 const server = app.listen(PORT, () => {
-	fs.writeFileSync(__dirname + "/logs.txt", "");
+	fs.writeFileSync(__dirname + "/logs.html", "");
 	log(`Listening on port ${PORT}.`);
 });
 
