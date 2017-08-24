@@ -77,12 +77,12 @@ wss.on("connection", (connection) => {
 				{
 					const username = message.FromUserId;
 					// If the user is not logged in yet.
-					log(`Logging in user  ${username}...`);
+					log(`Logging in ${username}...`);
 					if (!findUser(username)) {
 						const user = new User(connection, username);
 						users.push(user);
 					} else {
-						log(`User ${username} is already logged in.`);
+						log(`${username} is already logged in.`);
 					}
 				}
 				break;
