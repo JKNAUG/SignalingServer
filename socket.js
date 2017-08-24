@@ -9,7 +9,11 @@ const moment = require("moment");
 const PORT = process.env.PORT || 8080;
 const server = express()
 	.use((req, res) => {
-		res.send(`Signaling server active with ${wss.clients.size} connected clients.`);
+		try {
+			res.send(`Signaling server active with ${wss.clients.size} connected clients.`);
+		} catch (e) {
+			res.send("Error: " + e.message);
+		}
 		// Send back index.html for any http request.
 		// res.sendFile("index.html", { root: __dirname });
 	})
