@@ -9,8 +9,9 @@ const moment = require("moment");
 const PORT = process.env.PORT || 8080;
 const server = express()
 	.use((req, res) => {
+		res.send(`Signaling server active with ${wss.clients.size} connected clients.`);
 		// Send back index.html for any http request.
-		res.sendFile("index.html", { root: __dirname });
+		// res.sendFile("index.html", { root: __dirname });
 	})
 	.listen(PORT, () => {
 		log(`Listening on port ${PORT}.`);
@@ -18,7 +19,7 @@ const server = express()
 
 // const wss = new WebSocket.Server({ host: "0.0.0.0", port: PORT });
 // Start the WebSocket server.
-const wss = new WebSocket.Server({ server });
+var wss = new WebSocket.Server({ server });
 
 // All connected users.
 const users = [];
