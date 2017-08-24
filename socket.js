@@ -126,7 +126,26 @@ wss.on("connection", (connection) => {
 	connection.on("close", (/*code, message*/) => {
 		close(connection);
 	});
+
+	// When we receive the heartbeat back from the client,
+	// the connection is still alive.
+	connection.on("pong", () => {
+		connection.isAlive = true;
+	});
 });
+
+// Every 30 seconds, we must send a heartbeat to all clients so the
+// connection does not time out.
+setInterval(() => {
+	wss.clients.forEach(connection => {
+		if (connection.isAlive === false) {
+			return connection.terminate();
+		}
+
+		connection.isAlive = false;
+		connection.ping("", false, true);
+	});
+}, 30000);
 
 function forwardMessage(message) {
 	const receivingUsername = message.ToUserId;
