@@ -7,14 +7,14 @@ const moment = require("moment");
 
 // const wss = new WebSocket.Server({ host: "192.168.0.105", port: 8080 });
 const PORT = process.env.PORT || 8080;
-const server = express();
-server.use((req, res) => {
-	// Send back index.html for any http request.
-	res.sendFile("index.html", { root: __dirname });
-});
-server.listen(PORT, () => {
-	log(`Listening on port ${PORT}.`);
-});
+const server = express()
+	.use((req, res) => {
+		// Send back index.html for any http request.
+		res.sendFile("index.html", { root: __dirname });
+	})
+	.listen(PORT, () => {
+		log(`Listening on port ${PORT}.`);
+	});
 
 // const wss = new WebSocket.Server({ host: "0.0.0.0", port: PORT });
 // Start the WebSocket server.
