@@ -10,7 +10,7 @@ const moment = require("moment");
 const PORT = process.env.PORT || 8080;
 const server = express()
 	.use((req, res) => {
-		res.sendFile(path.join(__dirname, "index.html"));
+		res.sendFile("index.html", { root: __dirname });
 	})
 	.listen(PORT, () => {
 		log(`Listening on port ${PORT}.`);
@@ -59,7 +59,7 @@ function findUserByConnection(connection) {
 }
 
 wss.on("connection", (connection) => {
-	log(connection);
+	log("New connection...");
 
 	// Start listening for message when a connection is made.
 	connection.on("message", (rawMessage) => {
