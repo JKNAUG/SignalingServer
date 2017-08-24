@@ -2,6 +2,8 @@ const app = require("http").createServer(handler);
 const io = require("socket.io")(app);
 const fs = require("fs");
 
+app.listen(8080, "0.0.0.0");
+
 io.on("connection", socket => {
 	console.log("socket:");
 	console.log(socket);
@@ -21,5 +23,3 @@ function handler(req, res) {
 			res.end(data);
 		});
 }
-
-app.listen(8080);

@@ -2,11 +2,22 @@
 // Reference implementation: https://www.tutorialspoint.com/webrtc/webrtc_signaling.htm
 
 const WebSocket = require("ws");
+const express = require("express");
 const moment = require("moment");
 
 // Start the WebSocket server on port 8080.
 // const wss = new WebSocket.Server({ host: "192.168.0.105", port: 8080 });
-const wss = new WebSocket.Server({ host: "0.0.0.0", port: 8080 });
+const PORT = process.env.PORT || 8080;
+const server = express()
+	.use((req, res) => {
+		res.sendFile(path.join(__dirname, "index.html"));
+	})
+	.listen(PORT, () => {
+		log(`Listening on port ${PORT}.`);
+	});
+
+// const wss = new WebSocket.Server({ host: "0.0.0.0", port: PORT });
+const wss = new WebSocket.Server({ server });
 
 // All connected users.
 const users = [];
@@ -30,6 +41,10 @@ class User {
 		this.connection.send(JSON.stringify(message));
 	}
 }
+
+wss.on("listening", () => {
+	log("WebSocket server listening...");
+});
 
 wss.on("error", error => {
 	log("WebSocket Server error: " + error);
