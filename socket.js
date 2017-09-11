@@ -35,9 +35,9 @@ const users = [];
 
 app.get("/clients", (req, res) => {
 	try {
-		let str = "Logged in users:\n";
+		let str = "Logged in users:<br>";
 		for (const user of users) {
-			str += user.name + "\n";
+			str += user.name + "<br>";
 		}
 		res.send(str);
 	} catch (e) {
