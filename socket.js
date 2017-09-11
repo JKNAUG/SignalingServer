@@ -29,13 +29,25 @@ app.get("/", (req, res) => {
 app.get("/logs", (req, res) => {
 	res.sendFile("logs.html", { root: __dirname });
 });
-	
-// const wss = new WebSocket.Server({ host: "0.0.0.0", port: PORT });
-// Start the WebSocket server.
-var wss = new WebSocket.Server({ server });
 
 // All connected users.
 const users = [];
+
+app.get("/clients", (req, res) => {
+	try {
+		let str = "Logged in users:\n";
+		for (const user of users) {
+			str += user.name + "\n";
+		}
+		res.send(str);
+	} catch (e) {
+		res.send("Error: " + e.message);
+	}
+});
+
+// const wss = new WebSocket.Server({ host: "0.0.0.0", port: PORT });
+// Start the WebSocket server.
+var wss = new WebSocket.Server({ server });
 
 class User {
 	constructor(connection, name) {
