@@ -160,7 +160,7 @@ wss.on("connection", (connection) => {
 	});
 });
 
-// Every 30 seconds, we must send a heartbeat to all clients so the
+// Every 25 seconds, we must send a heartbeat to all clients so the
 // connection does not time out.
 setInterval(() => {
 	wss.clients.forEach(connection => {
@@ -171,7 +171,7 @@ setInterval(() => {
 		connection.isAlive = false;
 		connection.ping("", false, true);
 	});
-}, 30000);
+}, 25000);
 
 function forwardMessage(message) {
 	const receivingUsername = message.ToUserId;
