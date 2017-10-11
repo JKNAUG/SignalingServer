@@ -115,8 +115,11 @@ wss.on("connection", (connection) => {
 
 			case "Call":
 				let callingUser = findUserByConnection(connection);
-				callingUser.setConnectedUser(findUser(message.ToUserId));
-				forwardMessage(message);
+				let userToCall = findUser(message.ToUserId);
+				if (userToCall.getConnectedUser() !== callingUser) {
+					callingUser.setConnectedUser(userToCall);
+					forwardMessage(message);
+				}
 				break;
 
 			case "CallReject":
