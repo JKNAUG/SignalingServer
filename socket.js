@@ -116,9 +116,17 @@ wss.on("connection", (connection) => {
 			case "Call":
 				let callingUser = findUserByConnection(connection);
 				let userToCall = findUser(message.ToUserId);
-				if (userToCall.getConnectedUser() !== callingUser) {
-					callingUser.setConnectedUser(userToCall);
-					forwardMessage(message);
+				if (userToCall) {
+					if (userToCall.getConnectedUser() !== callingUser) {
+						callingUser.setConnectedUser(userToCall);
+						forwardMessage(message);
+					}
+				} else {
+					hangup(callingUser, {
+						Type: "Hangup",
+						FromUserId: message.FromUserId,
+						ToUserId: message.FromUserId
+					});
 				}
 				break;
 
