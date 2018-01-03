@@ -3,9 +3,9 @@
 
 const WebSocket = require("ws");
 const express = require("express");
-const moment = require("moment");
 const fs = require("fs");
-
+const log = require("./log");
+const heartbeat = require("./heartbeat");
 
 // const wss = new WebSocket.Server({ host: "192.168.0.105", port: 8080 });
 const PORT = process.env.PORT || 8080;
@@ -21,8 +21,6 @@ app.get("/", (req, res) => {
 	} catch (e) {
 		res.send("Error: " + e.message);
 	}
-	// Send back index.html for any http request.
-	// res.sendFile("index.html", { root: __dirname });
 });
 
 // Send the logs file when requested.
@@ -45,9 +43,8 @@ app.get("/clients", (req, res) => {
 	}
 });
 
-// const wss = new WebSocket.Server({ host: "0.0.0.0", port: PORT });
 // Start the WebSocket server.
-var wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({ server });
 
 class User {
 	constructor(connection, name) {
@@ -107,6 +104,7 @@ wss.on("connection", (connection) => {
 					if (!findUser(username)) {
 						const user = new User(connection, username);
 						users.push(user);
+						sendUserList(user);
 					} else {
 						log(`${username} is already logged in.`);
 					}
@@ -173,16 +171,7 @@ wss.on("connection", (connection) => {
 
 // Every 25 seconds, we must send a heartbeat to all clients so the
 // connection does not time out.
-setInterval(() => {
-	wss.clients.forEach(connection => {
-		if (connection.isAlive === false) {
-			return connection.terminate();
-		}
-
-		connection.isAlive = false;
-		connection.ping("", false, true);
-	});
-}, 25000);
+heartbeat(wss, 25000);
 
 function forwardMessage(message) {
 	const receivingUsername = message.ToUserId;
@@ -234,9 +223,17 @@ function hangup(user, message) {
 	forwardMessage(message);
 }
 
-function log(message) {
-	const dateStr = moment().format("DD/MM/YYYY HH:mm:ss");
-	const logMessage = `[${dateStr}] ${message}`;
-	console.log(logMessage);
-	fs.appendFile(__dirname + "/logs.html", logMessage + "</br>");
+function sendUserList(toUser) {
+	const userList = users.map(user => {
+		return {
+			Name: user.name,
+			Status: user.getConnectedUser() ? "Busy" : "Available"
+		};
+	});
+	log(userList);
+	const message = {
+		Type: "UserList",
+		Payload: JSON.stringify(userList)
+	};
+	toUser.send(message);
 }
