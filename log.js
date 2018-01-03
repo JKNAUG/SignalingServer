@@ -6,4 +6,4 @@ module.exports = function(message) {
 	const logMessage = `[${dateStr}] ${message}`;
 	console.log(logMessage);
 	fs.appendFile(__dirname + "/logs.html", logMessage + "</br>", () => {});
-}
+};

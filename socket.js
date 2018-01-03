@@ -5,7 +5,9 @@ const WebSocket = require("ws");
 const express = require("express");
 const fs = require("fs");
 const log = require("./log");
+const sendUserList = require("./sendUserList");
 const heartbeat = require("./heartbeat");
+const User = require("./user");
 
 // const wss = new WebSocket.Server({ host: "192.168.0.105", port: 8080 });
 const PORT = process.env.PORT || 8080;
@@ -46,26 +48,6 @@ app.get("/clients", (req, res) => {
 // Start the WebSocket server.
 const wss = new WebSocket.Server({ server });
 
-class User {
-	constructor(connection, name) {
-		this.connection = connection;
-		this.name = name;
-	}
-
-	setConnectedUser(user) {
-		// Add some validation...
-		this.connectedUser = user;
-	}
-
-	getConnectedUser() {
-		return this.connectedUser;
-	}
-
-	send(message) {
-		this.connection.send(JSON.stringify(message));
-	}
-}
-
 wss.on("listening", () => {
 	log("WebSocket server listening...");
 });
@@ -104,7 +86,7 @@ wss.on("connection", (connection) => {
 					if (!findUser(username)) {
 						const user = new User(connection, username);
 						users.push(user);
-						sendUserList(user);
+						broadcastUserList();
 					} else {
 						log(`${username} is already logged in.`);
 					}
@@ -223,17 +205,6 @@ function hangup(user, message) {
 	forwardMessage(message);
 }
 
-function sendUserList(toUser) {
-	const userList = users.map(user => {
-		return {
-			Name: user.name,
-			Status: user.getConnectedUser() ? "Busy" : "Available"
-		};
-	});
-	log(userList);
-	const message = {
-		Type: "UserList",
-		Payload: JSON.stringify(userList)
-	};
-	toUser.send(message);
+function broadcastUserList() {
+	sendUserList(users);
 }
