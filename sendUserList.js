@@ -4,9 +4,12 @@ const User = require("./user");
 module.exports = function(users) {
 	// testing
 	var nusers = users.slice();
-	nusers.push(new User(null, "Mister User"));
-	nusers.push(new User(null, "Nice Guy"));
-
+	// nusers.push(new User(null, "Mister User"));
+	// let newUser = new User(null, "Nice Guy");
+	// newUser.connectedUser = {};
+	// nusers.push(newUser);
+	// nusers.push(new User(null, "A User"));
+	
 	for (const userToSendTo of nusers) {
 		// Put all users except the current one in the list.
 		// We don't want to include a user in their own online users list.

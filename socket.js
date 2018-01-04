@@ -1,52 +1,23 @@
 // WebSocket server for WebRTC signaling.
 // Reference implementation: https://www.tutorialspoint.com/webrtc/webrtc_signaling.htm
-
 const WebSocket = require("ws");
-const express = require("express");
-const fs = require("fs");
+const httpServer = require("./server");
 const log = require("./log");
 const sendUserList = require("./sendUserList");
 const heartbeat = require("./heartbeat");
 const User = require("./user");
 
-// const wss = new WebSocket.Server({ host: "192.168.0.105", port: 8080 });
-const PORT = process.env.PORT || 8080;
-const app = express();
-const server = app.listen(PORT, () => {
-	fs.writeFileSync(__dirname + "/logs.html", "");
-	log(`Listening on port ${PORT}.`);
-});
-
-app.get("/", (req, res) => {
-	try {
-		res.send(`Signaling server active with ${wss.clients.size} connected clients.`);
-	} catch (e) {
-		res.send("Error: " + e.message);
-	}
-});
-
-// Send the logs file when requested.
-app.get("/logs", (req, res) => {
-	res.sendFile("logs.html", { root: __dirname });
-});
-
 // All connected users.
 const users = [];
 
-app.get("/clients", (req, res) => {
-	try {
-		let str = "Logged in users:<br>";
-		for (const user of users) {
-			str += user.name + "<br>";
-		}
-		res.send(str);
-	} catch (e) {
-		res.send("Error: " + e.message);
-	}
-});
-
 // Start the WebSocket server.
+const server = httpServer.createServer();
 const wss = new WebSocket.Server({ server });
+server.startServer(wss, users);
+
+// Every 25 seconds, we must send a heartbeat to all clients so the
+// connection does not time out.
+heartbeat(wss, 25000);
 
 wss.on("listening", () => {
 	log("WebSocket server listening...");
@@ -98,8 +69,13 @@ wss.on("connection", (connection) => {
 				let userToCall = findUser(message.ToUserId);
 				if (userToCall) {
 					if (userToCall.getConnectedUser() !== callingUser) {
+						// Connect both users. They will be disconnect or reject or hangup.
 						callingUser.setConnectedUser(userToCall);
-						forwardMessage(message);
+						userToCall.setConnectedUser(callingUser);
+						
+						if (forwardMessage(message)) {
+							broadcastUserList();
+						}
 					}
 				} else {
 					hangup(callingUser, {
@@ -121,7 +97,9 @@ wss.on("connection", (connection) => {
 				{
 					let user = findUserByConnection(connection);
 					user.setConnectedUser(findUser(message.ToUserId));
-					forwardMessage(message);
+					if (forwardMessage(message)) {
+						broadcastUserList();
+					}
 				}
 				break;
 
@@ -130,6 +108,7 @@ wss.on("connection", (connection) => {
 					let user = findUserByConnection(connection);
 					if (user.getConnectedUser()) {
 						hangup(user, message);
+						broadcastUserList();
 					}
 				}
 				break;
@@ -151,10 +130,6 @@ wss.on("connection", (connection) => {
 	});
 });
 
-// Every 25 seconds, we must send a heartbeat to all clients so the
-// connection does not time out.
-heartbeat(wss, 25000);
-
 function forwardMessage(message) {
 	const receivingUsername = message.ToUserId;
 	const userToForwardTo = findUser(receivingUsername);
@@ -170,7 +145,8 @@ function forwardMessage(message) {
 		Type: "Hangup", // Could change this type to "User not available" or something.
 		FromUserId: message.FromUserId,
 		ToUserId: message.FromUserId
-	})
+	});
+	broadcastUserList();
 	return false;
 }
 
@@ -188,12 +164,15 @@ function close(connection) {
 		}
 		log(`Closing user ${user.name}.`);
 		users.splice(users.indexOf(user), 1);
+		broadcastUserList();
 	} else {
 		log("Closing connection without login.");
 	}
 }
 
 function hangup(user, message) {
+	log("Hangup user " + user.name);
+
 	// Clear "other username" on both connections.
 	// This could be a bit more elegant with some sort of "ongoing calls" list.
 	// let otherConnection = users[connection.otherUsername];

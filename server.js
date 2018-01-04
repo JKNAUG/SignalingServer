@@ -1,25 +1,42 @@
-const app = require("http").createServer(handler);
-const io = require("socket.io")(app);
+const express = require("express");
 const fs = require("fs");
+const log = require("./log");
 
-app.listen(8080, "0.0.0.0");
+const app = express();
 
-io.on("connection", socket => {
-	console.log("socket:");
-	console.log(socket);
-	socket.emit("message", "thanks");
-});
+module.exports.createServer = function(wss, users) {
+	const PORT = process.env.PORT || 8080;
+	const server = app.listen(PORT, () => {
+		fs.writeFileSync(__dirname + "/logs.html", "");
+		log(`Listening on port ${PORT}.`);
+	});
 
-function handler(req, res) {
-	fs.readFile(__dirname + '/index.html',
-		function (err, data) {
-			if (err) {
-				console.log(err);
-				res.writeHead(500);
-				return res.end('Error loading index.html');
+	server.startServer = function(wss, users) {
+		app.get("/", (req, res) => {
+			try {
+				res.send(`Signaling server active with ${wss.clients.size} connected clients.`);
+			} catch (e) {
+				res.send("Error: " + e.message);
 			}
-
-			res.writeHead(200);
-			res.end(data);
 		});
-}
+		
+		// Send the logs file when requested.
+		app.get("/logs", (req, res) => {
+			res.sendFile("logs.html", { root: __dirname });
+		});
+		
+		app.get("/clients", (req, res) => {
+			try {
+				let str = "Logged in users:<br>";
+				for (const user of users) {
+					str += user.name + "<br>";
+				}
+				res.send(str);
+			} catch (e) {
+				res.send("Error: " + e.message);
+			}
+		});
+	};
+
+	return server;
+};
