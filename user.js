@@ -13,6 +13,10 @@ module.exports = class User {
 		return this.connectedUser;
 	}
 
+	isAvailable() {
+		return !this.getConnectedUser();
+	}
+
 	send(message) {
 		if (this.connection) {
 			this.connection.send(JSON.stringify(message));

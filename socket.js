@@ -67,17 +67,25 @@ wss.on("connection", (connection) => {
 			case "Call":
 				let callingUser = findUserByConnection(connection);
 				let userToCall = findUser(message.ToUserId);
-				if (userToCall) {
-					if (userToCall.getConnectedUser() !== callingUser) {
+				let successfulConnection = false;
+				if (callingUser && userToCall) {
+					if (userToCall.isAvailable()) {
 						// Connect both users. They will be disconnect or reject or hangup.
 						callingUser.setConnectedUser(userToCall);
 						userToCall.setConnectedUser(callingUser);
 						
 						if (forwardMessage(message)) {
+							successfulConnection = true;
 							broadcastUserList();
 						}
 					}
-				} else {
+					else if (userToCall.getConnectedUser() === callingUser) {
+						// We were already connected to the other user.
+						successfulConnection = true;
+					}
+				}
+
+				if (!successfulConnection && callingUser) {
 					hangup(callingUser, {
 						Type: "Hangup",
 						FromUserId: message.FromUserId,
@@ -185,5 +193,6 @@ function hangup(user, message) {
 }
 
 function broadcastUserList() {
+	log("Broadcasting updated user list...");
 	sendUserList(users);
 }

@@ -13,20 +13,32 @@ try {
 
 ws.on("open", () => {
 	console.log("open");
+	const user2name = "test_client";
+	const username = "test_client2";
+
 	const data = {
 		Type: "Login",
-		FromUserId: "test_client"
+		FromUserId: username
 	};
 	ws.send(JSON.stringify(data));
 
-	setTimeout(() => {
-		const msg = {
-			Type: "Call",
-			FromUserId: "test_client",
-			ToUserId: "KVA"
-		};
-		ws.send(JSON.stringify(msg));
-	}, 3000);
+	// setInterval(() => {
+	// 	const msg = {
+	// 		Type: "Call",
+	// 		FromUserId: username,
+	// 		ToUserId: user2name
+	// 	};
+	// 	ws.send(JSON.stringify(msg));
+
+	// 	setTimeout(() => {
+	// 		const msg = {
+	// 			Type: "Hangup",
+	// 			FromUserId: username,
+	// 			ToUserId: user2name
+	// 		};
+	// 		ws.send(JSON.stringify(msg));
+	// 	}, 4000);
+	// }, 8000);
 
 	ws.on("message", data => {
 		console.log(data);
