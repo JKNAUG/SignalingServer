@@ -13,32 +13,35 @@ try {
 
 ws.on("open", () => {
 	console.log("open");
-	const user2name = "test_client";
-	const username = "test_client2";
+	const username = "test_client";
+	const user2name = "test_client2";
 
 	const data = {
 		Type: "Login",
-		FromUserId: username
+		Payload: JSON.stringify({
+			Username: username,
+			ProfileName: "HOURS_2.6"
+		})
 	};
 	ws.send(JSON.stringify(data));
 
-	// setInterval(() => {
-	// 	const msg = {
-	// 		Type: "Call",
-	// 		FromUserId: username,
-	// 		ToUserId: user2name
-	// 	};
-	// 	ws.send(JSON.stringify(msg));
+	setInterval(() => {
+		const msg = {
+			Type: "Call",
+			FromUserId: username,
+			ToUserId: user2name
+		};
+		ws.send(JSON.stringify(msg));
 
-	// 	setTimeout(() => {
-	// 		const msg = {
-	// 			Type: "Hangup",
-	// 			FromUserId: username,
-	// 			ToUserId: user2name
-	// 		};
-	// 		ws.send(JSON.stringify(msg));
-	// 	}, 4000);
-	// }, 8000);
+		setTimeout(() => {
+			const msg = {
+				Type: "Hangup",
+				FromUserId: username,
+				ToUserId: user2name
+			};
+			ws.send(JSON.stringify(msg));
+		}, 4000);
+	}, 8000);
 
 	ws.on("message", data => {
 		console.log(data);

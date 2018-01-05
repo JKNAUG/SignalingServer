@@ -1,7 +1,8 @@
 module.exports = class User {
-	constructor(connection, name) {
+	constructor(connection, name, profileName) {
 		this.connection = connection;
 		this.name = name;
+		this.profileName = profileName;
 	}
 
 	setConnectedUser(user) {

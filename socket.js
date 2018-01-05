@@ -51,11 +51,12 @@ wss.on("connection", (connection) => {
 		switch (message.Type) {
 			case "Login":
 				{
-					const username = message.FromUserId;
+					const loginArgs = JSON.parse(message.Payload);
+					const username = loginArgs.Username;
 					// If the user is not logged in yet.
-					log(`Logging in ${username}...`);
 					if (!findUser(username)) {
-						const user = new User(connection, username);
+						log(`Logging in ${username} (profile ${loginArgs.ProfileName})...`);
+						const user = new User(connection, username, loginArgs.ProfileName);
 						users.push(user);
 						broadcastUserList();
 					} else {

@@ -20,6 +20,7 @@ module.exports = function(users) {
 			if (user !== userToSendTo) {
 				list.push({
 					Name: user.name,
+					ProfileName: user.profileName,
 					Status: user.isAvailable() ? AVAILABLE_STATUS : BUSY_STATUS
 				});
 			}
