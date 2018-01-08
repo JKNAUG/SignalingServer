@@ -1,0 +1,59 @@
+<html lang="en">
+
+<head>
+	<meta charset="utf-8" />
+</head>
+<style>
+	body {
+		background: #eee;
+	}
+
+	video {
+		background: black;
+		border: 1px solid gray;
+	}
+
+	.buttons {
+		margin-top: 15px;
+		margin-bottom: 15px;
+	}
+
+	#localVideo {
+		width: 250px;
+		height: 250px;
+	}
+
+	#remoteVideo {
+		width: 500px;
+		height: 500px;
+	}
+</style>
+
+<body>
+
+	<div class="buttons">
+		<input type="text" id="loginInput" placeholder="Username" />
+		<button id="loginBtn">Login</button>
+	</div>
+
+	<div>
+		<video id="remoteVideo" autoplay></video>
+		<video id="localVideo" autoplay></video>
+	</div>
+
+	<div class="select">
+		<label for="audioSource">Audio source: </label>
+		<select id="audioSource"></select>
+	</div>
+
+	<div class="select">
+		<label for="videoSource">Video source: </label>
+		<select id="videoSource"></select>
+	</div>
+
+	<script src="webclient.js"></script>
+	<script src="devicePicker.js"></script>
+
+</body>
+
+</html>
