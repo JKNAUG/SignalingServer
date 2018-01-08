@@ -1,4 +1,4 @@
-let connection = new WebSocket('ws://localhost:8080');
+let connection;
 let name = "";
 
 var loginInput = document.querySelector('#loginInput');
@@ -8,9 +8,20 @@ let remoteVideo = document.querySelector("#remoteVideo");
 
 let connectedUser, myConnection;
 
-loginBtn.addEventListener("click", function (event) {
-	name = loginInput.value;
-	if (name.length > 0) {
+function connect() {
+	const signalingServerUri = "ws://localhost:8080";
+	// "onClose" will be called shortly after this if the connection fails.
+	connection = new WebSocket(signalingServerUri);
+	initWebSocketEvents();
+	loginBtn.addEventListener("click", login);
+}
+
+connect();
+
+function login() {
+	if (loginInput.value || name.length > 0) {
+		name = loginInput.value;
+		log("Logging in " + name);
 		send({
 			Type: "Login",
 			Payload: JSON.stringify({
@@ -19,38 +30,52 @@ loginBtn.addEventListener("click", function (event) {
 			})
 		});
 	}
-});
+}
 
-// Handle messages from the server.
-connection.onmessage = function (rawMessage) {
-	let message;
-	try {
-		message = JSON.parse(rawMessage.data);
-	} catch (exception) {
-		log(exception);
-		return;
-	}
+function initWebSocketEvents() {
+	connection.onopen = () => {
+		log("Connected.");
+		// Try to login automatically (if we already previously entered a username).
+		login();
+	};
 
-	switch (message.Type) {
-		case "Call":
-			onCall(message);
-			break;
-		case "SdpOffer":
-			onOffer(message);
-			break;
-		case "IceCandidate":
-			onCandidates(message);
-			break;
-		case "Hangup":
-			onHangup(message);
-			break;
-		default:
-			break;
-	}
-};
+	// Handle messages from the server.
+	connection.onmessage = rawMessage => {
+		let message;
+		try {
+			message = JSON.parse(rawMessage.data);
+		} catch (exception) {
+			log(exception);
+			return;
+		}
+
+		switch (message.Type) {
+			case "Call":
+				onCall(message);
+				break;
+			case "SdpOffer":
+				onOffer(message);
+				break;
+			case "IceCandidate":
+				onCandidates(message);
+				break;
+			case "Hangup":
+				onHangup(message);
+				break;
+			default:
+				break;
+		}
+	};
+
+	connection.onerror = err => {
+		log(err);
+	};
+	
+	connection.onclose = onClose;
+}
 
 function onCall(message) {
-	// Accept all incoming call immediately.
+	// Accept all incoming calls immediately.
 	send({
 		Type: "CallAccept",
 		FromUserId: name,
@@ -117,7 +142,7 @@ function createLocalPeerConnection() {
 	};
 
 	myConnection = new webkitRTCPeerConnection(configuration);
-	console.log("RTCPeerConnection object was created.");
+	log("RTCPeerConnection object was created.");
 
 	// When the browser finds an ice candidate we send it to the connected peer.
 	myConnection.onicecandidate = event => {
@@ -137,17 +162,17 @@ function createLocalPeerConnection() {
 	};
 }
 
-connection.onopen = () => {
-	console.log("Connected");
-};
+function onClose() {
+	const retryMs = 2500;
+	log("Connection closed. Retrying in " + retryMs + "ms...");
+	onHangup();
+	loginBtn.removeEventListener("click", login);
 
-connection.onerror = err => {
-	console.log("Got error", err);
-};
-
-connection.onclose = () => {
-
-};
+	// Retry the WebSocket connection after a few seconds.
+	setTimeout(() => {
+		connect();
+	}, retryMs)
+}
 
 function send(message) {
 	connection.send(JSON.stringify(message));
