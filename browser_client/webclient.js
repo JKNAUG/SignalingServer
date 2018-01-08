@@ -1,10 +1,8 @@
-var connection = new WebSocket('ws://localhost:8080');
+let connection = new WebSocket('ws://localhost:8080');
 let name = "";
 
 var loginInput = document.querySelector('#loginInput');
 var loginBtn = document.querySelector('#loginBtn');
-var otherUsernameInput = document.querySelector('#otherUsernameInput');
-var connectToOtherUsernameBtn = document.querySelector('#connectToOtherUsernameBtn');
 let localVideo = document.querySelector("#localVideo"); 
 let remoteVideo = document.querySelector("#remoteVideo");
 
