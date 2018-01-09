@@ -1,12 +1,21 @@
 let connection;
 let name = "";
 
-var loginInput = document.querySelector('#loginInput');
-var loginBtn = document.querySelector('#loginBtn');
+let loginInput = document.querySelector("#loginInput");
+let loginBtn = document.querySelector("#loginBtn");
+let connectingText = document.querySelector("#connectingText");
 let localVideo = document.querySelector("#localVideo"); 
 let remoteVideo = document.querySelector("#remoteVideo");
 
 let connectedUser, myConnection;
+
+function setLoginUIEnabled(enabled) {
+	loginInput.disabled = !enabled;
+	loginBtn.disabled = !enabled;
+	connectingText.style.display = enabled ? "none" : "inline";
+}
+
+setLoginUIEnabled(false);
 
 function connect() {
 	const signalingServerUri = "ws://localhost:8080";
@@ -35,6 +44,7 @@ function login() {
 function initWebSocketEvents() {
 	connection.onopen = () => {
 		log("Connected.");
+		setLoginUIEnabled(true);
 		// Try to login automatically (if we already previously entered a username).
 		login();
 	};
@@ -163,7 +173,8 @@ function createLocalPeerConnection() {
 }
 
 function onClose() {
-	const retryMs = 2500;
+	setLoginUIEnabled(false);	
+	const retryMs = 2000;
 	log("Connection closed. Retrying in " + retryMs + "ms...");
 	onHangup();
 	loginBtn.removeEventListener("click", login);

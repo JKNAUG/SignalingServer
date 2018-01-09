@@ -18,6 +18,14 @@
 		margin-bottom: 15px;
 	}
 
+	.streams {
+		margin-bottom: 15px;
+	}
+
+	.select {
+		margin-bottom: 5px;
+	}
+
 	#localVideo {
 		width: 250px;
 		height: 250px;
@@ -27,28 +35,36 @@
 		width: 500px;
 		height: 500px;
 	}
+
+	#connectingText {
+		display: inline;
+		margin-left: 5px;
+	}
 </style>
 
 <body>
 
+	<p>This client will automatically pick up when called. Open the debug console for logs.</p>
+
 	<div class="buttons">
 		<input type="text" id="loginInput" placeholder="Username" />
 		<button id="loginBtn">Login</button>
+		<p id="connectingText">Connecting...</p>
 	</div>
 
-	<div>
+	<div class="streams">
 		<video id="remoteVideo" autoplay></video>
 		<video id="localVideo" autoplay></video>
 	</div>
 
 	<div class="select">
-		<label for="audioSource">Audio source: </label>
-		<select id="audioSource"></select>
+		<label for="videoSource">Video source: </label>
+		<select id="videoSource"></select>
 	</div>
 
 	<div class="select">
-		<label for="videoSource">Video source: </label>
-		<select id="videoSource"></select>
+		<label for="audioSource">Audio source: </label>
+		<select id="audioSource"></select>
 	</div>
 
 	<script src="webclient.js"></script>
