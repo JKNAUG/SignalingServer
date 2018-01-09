@@ -13,7 +13,7 @@ const users = [];
 // Start the WebSocket server.
 const server = httpServer.createServer();
 const wss = new WebSocket.Server({ server });
-server.startServer(wss, users);
+server.startServer(users);
 
 // Every 25 seconds, we must send a heartbeat to all clients so the
 // connection does not time out.

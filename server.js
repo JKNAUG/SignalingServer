@@ -4,17 +4,17 @@ const log = require("./log");
 
 const app = express();
 
-module.exports.createServer = function(wss, users) {
+module.exports.createServer = function(users) {
 	const PORT = process.env.PORT || 8080;
 	const server = app.listen(PORT, () => {
 		fs.writeFileSync(__dirname + "/logs.html", "");
 		log(`Listening on port ${PORT}.`);
 	});
 
-	server.startServer = function(wss, users) {
+	server.startServer = function(users) {
 		app.get("/", (req, res) => {
 			try {
-				res.send(`Signaling server active with ${wss.clients.size} connected clients.`);
+				res.send(`Signaling server active with ${users.length} connected users.`);
 			} catch (e) {
 				res.send("Error: " + e.message);
 			}
