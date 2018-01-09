@@ -18,7 +18,8 @@ function setLoginUIEnabled(enabled) {
 setLoginUIEnabled(false);
 
 function connect() {
-	const signalingServerUri = "ws://localhost:8080";
+	const signalingServerUri = "ws://192.168.0.114:8080";
+	// const signalingServerUri = "ws://localhost:8080";
 	// "onClose" will be called shortly after this if the connection fails.
 	connection = new WebSocket(signalingServerUri);
 	initWebSocketEvents();
@@ -209,10 +210,22 @@ function onCandidates(message) {
 
 function onHangup(message) {
 	if (myConnection) {
+		log("Call hung up.");
 		myConnection.close();
 		myConnection = null;
 
-		remoteVideo.srcObject = null;
-		localVideo.srcObject = null;
+		// Stop the streams.
+		if (remoteVideo.srcObject) {
+			for (const track of remoteVideo.srcObject.getTracks()) {
+				track.stop();
+			}
+			remoteVideo.srcObject = null;
+		}
+		if (localVideo.srcObject) {
+			for (const track of localVideo.srcObject.getTracks()) {
+				track.stop();
+			}
+			localVideo.srcObject = null;
+		}
 	}
 }
