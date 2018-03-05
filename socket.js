@@ -51,7 +51,6 @@ wss.on("connection", (connection) => {
 		switch (message.Type) {
 			case "Login":
 				{
-					log(message.Payload);
 					const loginArgs = JSON.parse(message.Payload);
 					if (loginArgs) {
 						const username = loginArgs.Username;
