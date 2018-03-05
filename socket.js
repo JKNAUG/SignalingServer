@@ -51,16 +51,19 @@ wss.on("connection", (connection) => {
 		switch (message.Type) {
 			case "Login":
 				{
+					log(message.Payload);
 					const loginArgs = JSON.parse(message.Payload);
-					const username = loginArgs.Username;
-					// If the user is not logged in yet.
-					if (!findUser(username)) {
-						log(`Logging in ${username} (profile ${loginArgs.ProfileName})...`);
-						const user = new User(connection, username, loginArgs.ProfileName);
-						users.push(user);
-						broadcastUserList();
-					} else {
-						log(`${username} is already logged in.`);
+					if (loginArgs) {
+						const username = loginArgs.Username;
+						// If the user is not logged in yet.
+						if (!findUser(username)) {
+							log(`Logging in ${username} (profile ${loginArgs.ProfileName})...`);
+							const user = new User(connection, username, loginArgs.ProfileName);
+							users.push(user);
+							broadcastUserList();
+						} else {
+							log(`${username} is already logged in.`);
+						}
 					}
 				}
 				break;

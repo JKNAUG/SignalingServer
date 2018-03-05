@@ -8,6 +8,7 @@ let localVideo = document.querySelector("#localVideo");
 let remoteVideo = document.querySelector("#remoteVideo");
 
 let connectedUser, myConnection;
+const signalingServerUri = "ws://signaling-server-webrtc-2.herokuapp.com";
 
 function setLoginUIEnabled(enabled) {
 	loginInput.disabled = !enabled;
@@ -18,7 +19,6 @@ function setLoginUIEnabled(enabled) {
 setLoginUIEnabled(false);
 
 function connect() {
-	const signalingServerUri = "ws://192.168.0.114:8080";
 	// const signalingServerUri = "ws://localhost:8080";
 	// "onClose" will be called shortly after this if the connection fails.
 	connection = new WebSocket(signalingServerUri);
