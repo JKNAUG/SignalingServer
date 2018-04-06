@@ -4,6 +4,8 @@
 3. Start the server extension, press "Choose Folder", and choose the folder containing the client application.
 4. A new tab will open, running the web client app.
 
+NOTE: If you wish to change the signaling server the client connects to by default, edit the "signalingServerUri" variable in webclient.js.
+
 # How to use the client
 It is generally a good idea to have the console open when using the app to see the logs. Press Ctrl+Shift+J to open the console in Chrome.
 1. Keep the tab containing the web client open at all times.
