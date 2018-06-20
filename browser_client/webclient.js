@@ -1,15 +1,22 @@
-let connection;
+// Our WebSocket object.
+let webSocket;
+// Our local username.
 let name = "";
 
+// Get some elements from our HTML.
 let loginInput = document.querySelector("#loginInput");
 let loginBtn = document.querySelector("#loginBtn");
 let connectingText = document.querySelector("#connectingText");
 let localVideo = document.querySelector("#localVideo"); 
 let remoteVideo = document.querySelector("#remoteVideo");
 
-let connectedUser, myConnection;
+// Username of the user we have a P2P connection with, or null.
+let connectedUser
+// Our own RTCPeerConnection object.
+let myConnection;
 const signalingServerUri = "ws://signaling-server-webrtc-2.herokuapp.com";
 
+// Shows the login text input and button.
 function setLoginUIEnabled(enabled) {
 	loginInput.disabled = !enabled;
 	loginBtn.disabled = !enabled;
@@ -18,16 +25,18 @@ function setLoginUIEnabled(enabled) {
 
 setLoginUIEnabled(false);
 
+// Establish WebSocket connection to the signaling server.
 function connect() {
 	// const signalingServerUri = "ws://localhost:8080";
 	// "onClose" will be called shortly after this if the connection fails.
-	connection = new WebSocket(signalingServerUri);
+	webSocket = new WebSocket(signalingServerUri);
 	initWebSocketEvents();
 	loginBtn.addEventListener("click", login);
 }
 
 connect();
 
+// Sends login message to signaling server.
 function login() {
 	if (loginInput.value || name.length > 0) {
 		name = loginInput.value;
@@ -43,7 +52,7 @@ function login() {
 }
 
 function initWebSocketEvents() {
-	connection.onopen = () => {
+	webSocket.onopen = () => {
 		log("Connected.");
 		setLoginUIEnabled(true);
 		// Try to login automatically (if we already previously entered a username).
@@ -51,7 +60,7 @@ function initWebSocketEvents() {
 	};
 
 	// Handle messages from the server.
-	connection.onmessage = rawMessage => {
+	webSocket.onmessage = rawMessage => {
 		let message;
 		try {
 			message = JSON.parse(rawMessage.data);
@@ -78,15 +87,15 @@ function initWebSocketEvents() {
 		}
 	};
 
-	connection.onerror = err => {
+	webSocket.onerror = err => {
 		log(err);
 	};
 	
-	connection.onclose = onClose;
+	webSocket.onclose = onClose;
 }
 
+// Accept all incoming calls immediately.
 function onCall(message) {
-	// Accept all incoming calls immediately.
 	send({
 		Type: "CallAccept",
 		FromUserId: name,
@@ -94,6 +103,7 @@ function onCall(message) {
 	});
 }
 
+// After accepting a call, we will receive an SDP Offer.
 async function onOffer(message) {
 	log("Received offer from " + message.FromUserId);
 	createLocalPeerConnection();
@@ -116,6 +126,7 @@ async function onOffer(message) {
 	sendAnswer(message.FromUserId);
 }
 
+// Sends an SDP Answer to the client calling us.
 async function sendAnswer(toUser) {
 	const answer = await myConnection.createAnswer();
 	log("Sending answer to " + toUser);
@@ -128,6 +139,7 @@ async function sendAnswer(toUser) {
 	});
 }
 
+// Returns our local media stream.
 async function initializeMedia() {
 	const videoSource = videoInputSelect.value;
 	const audioSource = audioInputSelect.value;
@@ -187,7 +199,7 @@ function onClose() {
 }
 
 function send(message) {
-	connection.send(JSON.stringify(message));
+	webSocket.send(JSON.stringify(message));
 };
 
 function log(message) {
@@ -210,6 +222,7 @@ function onCandidates(message) {
 
 function onHangup(message) {
 	if (myConnection) {
+		// Close the P2P connection, but not the WebSocket connection to the server.
 		log("Call hung up.");
 		myConnection.close();
 		myConnection = null;

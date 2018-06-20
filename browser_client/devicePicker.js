@@ -1,3 +1,4 @@
+// Used for showing a list of audio and video devices in the browser.
 const audioInputSelect = document.querySelector("#audioSource");
 const videoInputSelect = document.querySelector("#videoSource");
 

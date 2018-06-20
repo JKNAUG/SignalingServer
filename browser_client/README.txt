@@ -20,4 +20,4 @@ It is generally a good idea to have the console open when using the app to see t
 3. Press the "Configure sources" button. You can add an extra video source in the left menu, where you may stream any video file of your choosing.
 4. Select the virtual cam from the "Video sources" list in the web client.
 
-A computer reboot might be required to see the virtual cam in the sources list.
+NOTE: A computer reboot might be required to see the virtual cam in the sources list.
