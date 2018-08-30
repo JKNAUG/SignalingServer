@@ -1,4 +1,5 @@
 # How to deploy
+For local deployment and running of the signaling server application, follow these steps:
 1. Download and install Node.js (https://nodejs.org/en/).
 2. Open a command line in the server project root folder.
 3. Write "npm i" in the command line and press enter.
@@ -9,6 +10,8 @@
    * You can view the state of the server by navigating to localhost:8080 in your browser.
    * You can also use the URL's localhost:8080/clients and localhost:8080/logs.
 5. If the server ever fails or crashes, restart it by running "npm start" again.
+
+When deploying the application on a cloud service such as Heroku (as is done currently), this service will automatically run these installation and deployment scripts, and usually no further action is needed.
 
 # Info
 * The signaling-server relevant code is found in socket.js.
